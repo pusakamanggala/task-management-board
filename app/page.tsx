@@ -69,10 +69,8 @@ export default function Home() {
             <TaskCard
               key={task.id}
               task={task}
-              onToggleChecklist={(itemId) => {
-                toggleChecklist(task.id, itemId);
-                refetch();
-              }}
+              onToggleChecklist={(itemId) => toggleChecklist(task.id, itemId)}
+              refetch={refetch}
             />
           ))}
         </div>

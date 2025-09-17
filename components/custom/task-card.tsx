@@ -1,26 +1,29 @@
 "use client";
 
-import { Clock3Icon, SquareCheckBig } from "lucide-react";
+import { Clock3Icon, SquareCheckBig, Trash2 } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
 import TaskLabelBadge from "./task-label-badge";
 import MemberStack from "./member-stack";
-import Image from "next/image";
 import { Task } from "@/types/task";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
+import EditTaskModal from "./edit-task-modal";
+import { Button } from "../ui/button";
 
 export default function TaskCard({
   task,
   onToggleChecklist,
+  refetch,
 }: {
   task: Task;
   onToggleChecklist: (itemId: string) => void;
+  refetch: () => void;
 }) {
   return (
     <div className="border p-3 rounded-xl bg-blue-100 space-y-2 shadow-xs w-full mb-4">
       {/* cover image */}
-      <div className="w-full h-[230px] relative mb-4">
+      {/* <div className="w-full h-[230px] relative mb-4">
         <Image
           src="https://placehold.co/600x400/png"
           alt="cover-image"
@@ -28,9 +31,17 @@ export default function TaskCard({
           fill
           sizes="30px"
         />
-      </div>
+      </div> */}
 
-      <TaskLabelBadge label={task.label} />
+      <div className="flex items-center justify-between">
+        <TaskLabelBadge label={task.label} />
+        <div className="space-x-1">
+          <EditTaskModal task={task} refetch={refetch} />
+          <Button className="bg-red-200 hover:bg-red-300 p-2! h-fit w-fit cursor-pointer">
+            <Trash2 className="text-red-500" />
+          </Button>
+        </div>
+      </div>
 
       <Progress
         value={
@@ -51,7 +62,10 @@ export default function TaskCard({
             <Checkbox
               id={item.id}
               checked={item.completed}
-              onCheckedChange={() => onToggleChecklist(item.id)}
+              onCheckedChange={() => {
+                onToggleChecklist(item.id);
+                refetch();
+              }}
               className="data-[state=checked]:bg-blue-500 data-[state=checked]:border-none border-slate-500"
             />
             <Label

@@ -35,38 +35,37 @@ import {
   MultiSelectValue,
 } from "@/components/ui/multi-select";
 import { taskFormSchema, TaskFormValues } from "@/lib/schemas/taskFormSchema";
-import { Task, TaskLabel, TaskPriority, TaskStatus } from "@/types/task";
+import { Task, TaskLabel, TaskPriority } from "@/types/task";
 import { nanoid } from "nanoid";
-import { PlusIcon, Trash2 } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import { members } from "@/data/members";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Avatar, AvatarImage } from "../ui/avatar";
+import { useUpdateTask } from "@/hooks/useUpdateTask";
 
-interface AddTaskModalProps {
-  taskStatus: TaskStatus;
-  handleAddTask: (task: Task) => void;
+interface EditTaskModalProps {
+  task: Task;
+  refetch: () => void;
 }
 
 const priorities: TaskPriority[] = ["low", "medium", "high"];
 const labels: TaskLabel[] = ["feature", "bug", "issue", "undefined"];
 
-export default function AddTaskModal({
-  taskStatus,
-  handleAddTask,
-}: AddTaskModalProps) {
+export default function EditTaskModal({ task, refetch }: EditTaskModalProps) {
   const [open, setOpen] = useState(false);
+  const { updateTask } = useUpdateTask();
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
-      title: "",
-      description: "",
-      assignee: null,
-      dueDate: "",
-      label: "undefined",
-      priority: "medium",
-      checklist: [],
-      attachment: null,
+      title: task.title,
+      description: task.description,
+      assignee: task.assignee,
+      dueDate: task.dueDate,
+      label: task.label,
+      priority: task.priority,
+      checklist: task.checklist || [],
+      attachment: task.attachment || null,
     },
   });
 
@@ -77,32 +76,40 @@ export default function AddTaskModal({
   } = useFieldArray({ control: form.control, name: "checklist" });
 
   const onSubmit = (values: TaskFormValues) => {
-    const today = new Date().toISOString();
-
-    handleAddTask({
+    updateTask(task.id, (prevTask) => ({
+      ...prevTask,
       ...values,
-      id: nanoid(),
-      createdAt: today,
-      updatedAt: today,
-      status: taskStatus,
-    });
-
+      updatedAt: new Date().toISOString(),
+    }));
+    refetch();
     setOpen(false);
   };
+
+  // Sync form if task changes
+  useEffect(() => {
+    form.reset({
+      title: task.title,
+      description: task.description,
+      assignee: task.assignee,
+      dueDate: task.dueDate,
+      label: task.label,
+      priority: task.priority,
+      checklist: task.checklist || [],
+      attachment: task.attachment || null,
+    });
+  }, [task, form]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          onClick={() => setOpen(true)}
-          className="bg-blue-200 hover:bg-blue-300 p-2! h-fit w-fit cursor-pointer"
-        >
-          <PlusIcon className="text-blue-500" />
+        <Button className="bg-blue-200 hover:bg-blue-300 p-2 h-fit w-fit cursor-pointer">
+          <Eye className="text-blue-500" />
         </Button>
       </DialogTrigger>
+
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Add Task</DialogTitle>
+        <DialogHeader className="sr-only">
+          <DialogTitle>Edit Task</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -118,7 +125,7 @@ export default function AddTaskModal({
                 <FormItem>
                   <FormLabel>Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Task title" {...field} />
+                    <Input {...field} placeholder="Task title" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -133,7 +140,7 @@ export default function AddTaskModal({
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Input placeholder="Task description" {...field} />
+                    <Input {...field} placeholder="Task description" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -148,10 +155,7 @@ export default function AddTaskModal({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Label</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select label" />
@@ -177,10 +181,7 @@ export default function AddTaskModal({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Priority</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select priority" />
@@ -201,7 +202,7 @@ export default function AddTaskModal({
               />
             </div>
 
-            {/* Assignee */}
+            {/* Assignees */}
             <FormField
               control={form.control}
               name="assignee"
@@ -210,9 +211,8 @@ export default function AddTaskModal({
                   <FormLabel>Assignees</FormLabel>
                   <FormControl>
                     <MultiSelect
-                      values={field.value?.map((m) => m.id) || []} // convert Member[] → string[]
+                      values={field.value?.map((m) => m.id) || []}
                       onValuesChange={(ids) => {
-                        // convert string[] → Member[]
                         const selectedMembers = members.filter((m) =>
                           ids.includes(m.id)
                         );
@@ -229,7 +229,7 @@ export default function AddTaskModal({
                           {members.map((member) => (
                             <MultiSelectItem key={member.id} value={member.id}>
                               <span className="flex items-center gap-2">
-                                <Avatar key={member.id} className="w-6 h-6">
+                                <Avatar className="w-6 h-6">
                                   <AvatarImage
                                     src={member.avatarUrl || ""}
                                     alt={member.name}
@@ -266,45 +266,37 @@ export default function AddTaskModal({
             {/* Checklist */}
             <div className="space-y-2">
               <FormLabel>Checklist</FormLabel>
-              <div className="space-y-2">
-                {checklistFields.map((item, index) => (
-                  <div key={item.id} className="flex items-center gap-2">
-                    <FormField
-                      control={form.control}
-                      name={`checklist.${index}.title`}
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormControl>
-                            <Input placeholder="Subtask title" {...field} />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      onClick={() => removeChecklist(index)}
-                      className="cursor-pointer"
-                      title="delete"
-                    >
-                      <Trash2 />
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() =>
-                    appendChecklist({
-                      id: nanoid(),
-                      title: "",
-                      completed: false,
-                    })
-                  }
-                >
-                  Add Subtask
-                </Button>
-              </div>
+              {checklistFields.map((item, index) => (
+                <div key={item.id} className="flex items-center gap-2">
+                  <FormField
+                    control={form.control}
+                    name={`checklist.${index}.title`}
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormControl>
+                          <Input {...field} placeholder="Subtask title" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => removeChecklist(index)}
+                  >
+                    <Trash2 />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  appendChecklist({ id: nanoid(), title: "", completed: false })
+                }
+              >
+                Add Subtask
+              </Button>
             </div>
 
             {/* Attachment */}
@@ -320,10 +312,7 @@ export default function AddTaskModal({
                         type="file"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
-                          if (!file) {
-                            field.onChange(null); // ✅ send empty value
-                            return;
-                          }
+                          if (!file) return field.onChange(null);
                           field.onChange({
                             id: nanoid(),
                             filename: file.name,
@@ -336,7 +325,6 @@ export default function AddTaskModal({
                   </FormItem>
                 )}
               />
-
               {form.watch("attachment") && (
                 <p className="text-sm text-muted-foreground mt-1">
                   Selected: {form.watch("attachment")?.filename} (
@@ -344,17 +332,18 @@ export default function AddTaskModal({
                 </p>
               )}
             </div>
+
             <div className="ml-auto w-fit space-x-1">
               <Button
-                variant={"outline"}
-                className="cursor-pointer"
+                variant="outline"
                 onClick={() => setOpen(false)}
+                className="cursor-pointer"
                 type="button"
               >
                 Cancel
               </Button>
               <Button type="submit" className="cursor-pointer">
-                Save Task
+                Update Task
               </Button>
             </div>
           </form>
