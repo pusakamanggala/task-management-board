@@ -34,25 +34,27 @@ import {
   MultiSelectTrigger,
   MultiSelectValue,
 } from "@/components/ui/multi-select";
-
 import { taskFormSchema, TaskFormValues } from "@/lib/schemas/taskFormSchema";
-import { TaskLabel, TaskPriority, TaskStatus } from "@/types/task";
+import { Task, TaskLabel, TaskPriority, TaskStatus } from "@/types/task";
 import { nanoid } from "nanoid";
 import { PlusIcon, Trash2 } from "lucide-react";
 import { members } from "@/data/members";
-import { useAddTask } from "@/hooks/useAddTask";
 import { useState } from "react";
+import { Avatar, AvatarImage } from "../ui/avatar";
 
 interface AddTaskModalProps {
   taskStatus: TaskStatus;
+  handleAddTask: (task: Task) => void;
 }
 
 const priorities: TaskPriority[] = ["low", "medium", "high"];
 const labels: TaskLabel[] = ["feature", "bug", "issue", "undefined"];
 
-export default function AddTaskModal({ taskStatus }: AddTaskModalProps) {
+export default function AddTaskModal({
+  taskStatus,
+  handleAddTask,
+}: AddTaskModalProps) {
   const [open, setOpen] = useState(false);
-  const addTask = useAddTask();
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
@@ -77,7 +79,7 @@ export default function AddTaskModal({ taskStatus }: AddTaskModalProps) {
   const onSubmit = (values: TaskFormValues) => {
     const today = new Date().toISOString();
 
-    addTask({
+    handleAddTask({
       ...values,
       id: nanoid(),
       createdAt: today,
@@ -227,11 +229,12 @@ export default function AddTaskModal({ taskStatus }: AddTaskModalProps) {
                           {members.map((member) => (
                             <MultiSelectItem key={member.id} value={member.id}>
                               <span className="flex items-center gap-2">
-                                <img
-                                  src={member.avatarUrl}
-                                  alt={member.name}
-                                  className="w-6 h-6 rounded-full"
-                                />
+                                <Avatar key={member.id} className="w-6 h-6">
+                                  <AvatarImage
+                                    src={member.avatarUrl || ""}
+                                    alt={member.name}
+                                  />
+                                </Avatar>
                                 {member.name}
                               </span>
                             </MultiSelectItem>
@@ -341,10 +344,18 @@ export default function AddTaskModal({ taskStatus }: AddTaskModalProps) {
                 </p>
               )}
             </div>
-
-            <Button type="submit" className="ml-auto w-fit">
-              Save Task
-            </Button>
+            <div className="ml-auto w-fit space-x-1">
+              <Button
+                variant={"outline"}
+                className="cursor-pointer"
+                onClick={() => setOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" className="cursor-pointer">
+                Save Task
+              </Button>
+            </div>
           </form>
         </Form>
       </DialogContent>

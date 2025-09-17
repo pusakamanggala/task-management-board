@@ -4,7 +4,7 @@ export type TaskPriority = "low" | "medium" | "high";
 // Label categories
 export type TaskLabel = "feature" | "bug" | "issue" | "undefined";
 
-export type TaskStatus = "todo" | "doing" | "review" | "Done" | "Rework";
+export type TaskStatus = "todo" | "doing" | "review" | "done" | "rework";
 
 // Checklist item (subtask)
 export interface ChecklistItem {
