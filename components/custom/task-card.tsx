@@ -53,7 +53,10 @@ export default function TaskCard({
       />
 
       {/* desc */}
-      <p className="text-sm text-slate-600 py-1">{task.description}</p>
+      <div className="py-2">
+        <h3 className="text-sm font-medium">{task.title}</h3>
+        <p className="text-sm text-slate-600">{task.description}</p>
+      </div>
 
       <div className="space-y-1 mb-4">
         {task.checklist.map((item) => (
