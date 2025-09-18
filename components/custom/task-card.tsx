@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock3Icon, SquareCheckBig, Trash2 } from "lucide-react";
+import { Clock3Icon, SquareCheckBig } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
 import TaskLabelBadge from "./task-label-badge";
@@ -9,7 +9,7 @@ import { Task } from "@/types/task";
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
 import EditTaskModal from "./edit-task-modal";
-import { Button } from "../ui/button";
+import DeleteTaskButton from "./delete-tast-button";
 
 export default function TaskCard({
   task,
@@ -37,9 +37,8 @@ export default function TaskCard({
         <TaskLabelBadge label={task.label} />
         <div className="space-x-1">
           <EditTaskModal task={task} refetch={refetch} />
-          <Button className="bg-red-200 hover:bg-red-300 p-2! h-fit w-fit cursor-pointer">
-            <Trash2 className="text-red-500" />
-          </Button>
+
+          <DeleteTaskButton taskId={task.id} refetch={refetch} />
         </div>
       </div>
 
