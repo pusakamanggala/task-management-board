@@ -10,6 +10,7 @@ import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
 import EditTaskModal from "./edit-task-modal";
 import DeleteTaskButton from "./delete-tast-button";
+import { format, isBefore, startOfDay } from "date-fns";
 
 export default function TaskCard({
   task,
@@ -87,9 +88,20 @@ export default function TaskCard({
       <div className="flex flex-row justify-between w-full">
         <div className="flex gap-2">
           {/* deadline */}
-          <Badge className="bg-teal-300/50 text-xs text-teal-800">
-            <Clock3Icon />
-            <span>8 Aug</span>
+          <Badge
+            className={`text-xs ${
+              task.dueDate &&
+              isBefore(new Date(task.dueDate), startOfDay(new Date()))
+                ? "bg-red-300/50 text-red-800"
+                : "bg-teal-300/50 text-teal-800"
+            }`}
+          >
+            <Clock3Icon className="mr-1 h-3 w-3" />
+            <span>
+              {task.dueDate
+                ? format(new Date(task.dueDate), "dd MMM")
+                : "No due date"}
+            </span>
           </Badge>
 
           {/* task list count */}
