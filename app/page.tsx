@@ -1,49 +1,37 @@
 "use client";
 
-import AddTaskModal from "@/components/custom/add-task-modal";
-import TaskCard from "@/components/custom/task-card";
+import { useState } from "react";
 import { useAddTask } from "@/hooks/useAddTask";
 import { useGetTasks } from "@/hooks/useGetTasks";
 import { useToggleChecklist } from "@/hooks/useToggleChecklist";
-import { TaskStatus } from "@/types/task";
+import { useUpdateTaskStatus } from "@/hooks/useUpdateTaskStatus";
+import { Task, TaskStatus } from "@/types/task";
 import { useSearchParams } from "next/navigation";
+import {
+  DndContext,
+  DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+} from "@dnd-kit/core";
+import TaskCard from "@/components/custom/task-card";
+import Column from "@/components/custom/column";
 
 export default function Home() {
   const { tasks, refetch } = useGetTasks();
   const toggleChecklist = useToggleChecklist();
   const addTask = useAddTask();
+  const { updateTaskStatus } = useUpdateTaskStatus();
 
   const searchParams = useSearchParams();
   const filter = searchParams.get("filter") || "label";
   const query = searchParams.get("q")?.toLowerCase() || "";
 
-  // Filter tasks based on query
-  const filteredTasks: typeof tasks = { ...tasks };
-
-  Object.keys(filteredTasks).forEach((status) => {
-    filteredTasks[status as TaskStatus] = filteredTasks[
-      status as TaskStatus
-    ].filter((task) => {
-      if (!filter || !query) return true;
-
-      switch (filter) {
-        case "label":
-          return (
-            task.label.toLowerCase().includes(query) ||
-            task.title.toLowerCase().includes(query) ||
-            task.description.toLowerCase().includes(query)
-          );
-        case "dueDate":
-          return task.dueDate.toLowerCase().includes(query);
-        case "assignee":
-          return task.assignee?.some((member) =>
-            member.name.toLowerCase().includes(query)
-          );
-        default:
-          return true;
-      }
-    });
-  });
+  const sensors = useSensors(useSensor(PointerSensor));
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   const statusOrder: TaskStatus[] = [
     "todo",
@@ -53,32 +41,102 @@ export default function Home() {
     "rework",
   ];
 
+  // filter tasks
+  const filteredTasks: typeof tasks = { ...tasks };
+  Object.keys(filteredTasks).forEach((status) => {
+    filteredTasks[status as TaskStatus] = filteredTasks[
+      status as TaskStatus
+    ].filter((task) => {
+      if (!filter || !query) return true;
+      switch (filter) {
+        case "label":
+          return (
+            task.label.toLowerCase().includes(query) ||
+            task.title.toLowerCase().includes(query) ||
+            task.description.toLowerCase().includes(query)
+          );
+        case "dueDate":
+          return task.dueDate?.toLowerCase().includes(query);
+        case "assignee":
+          return task.assignee?.some((m) =>
+            m.name.toLowerCase().includes(query)
+          );
+        default:
+          return true;
+      }
+    });
+  });
+
+  // find task across statuses
+  const findTaskById = (id?: string | null): Task | null => {
+    if (!id) return null;
+
+    for (const status of Object.keys(tasks) as Array<TaskStatus>) {
+      const found = tasks[status]?.find((t) => t.id === id);
+      if (found) return found;
+    }
+
+    return null;
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(String(event.active.id));
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+    if (!over) return;
+
+    const taskId = String(active.id);
+    const newStatus = over.id as TaskStatus;
+    const currentTask = findTaskById(taskId);
+    if (!currentTask) return;
+
+    if (currentTask.status !== newStatus) {
+      updateTaskStatus(taskId, newStatus);
+      refetch();
+    }
+  };
+
+  const handleDragCancel = () => {
+    setActiveId(null);
+  };
+
+  const activeTask = findTaskById(activeId);
+
   return (
-    <div className="flex flex-wrap gap-6 container mx-auto p-4">
-      {statusOrder.map((status) => (
-        <div key={status} className="w-full md:max-w-[350px] space-y-3">
-          <div className="flex gap-2 items-center">
-            <h2 className="font-semibold text-xl">
-              {status.charAt(0).toUpperCase() + status.slice(1)}
-            </h2>
-            <AddTaskModal
-              taskStatus={status}
-              handleAddTask={(task) => {
-                addTask(task);
-                refetch();
-              }}
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
+    >
+      <div className="flex flex-wrap gap-6 container mx-auto p-4">
+        {statusOrder.map((status) => (
+          <Column
+            key={status}
+            status={status}
+            tasks={filteredTasks[status]}
+            addTask={addTask}
+            toggleChecklist={toggleChecklist}
+            refetch={refetch}
+          />
+        ))}
+      </div>
+
+      <DragOverlay>
+        {activeTask && (
+          <div style={{ width: "100%", maxWidth: 350 }}>
+            <TaskCard
+              task={activeTask}
+              onToggleChecklist={() => {}}
+              refetch={() => {}}
             />
           </div>
-          {filteredTasks[status]?.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              onToggleChecklist={(itemId) => toggleChecklist(task.id, itemId)}
-              refetch={refetch}
-            />
-          ))}
-        </div>
-      ))}
-    </div>
+        )}
+      </DragOverlay>
+    </DndContext>
   );
 }
