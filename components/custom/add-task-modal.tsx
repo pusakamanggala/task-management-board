@@ -67,6 +67,7 @@ export default function AddTaskModal({
       priority: "medium",
       checklist: [],
       attachment: null,
+      status: taskStatus,
     },
   });
 
@@ -84,7 +85,6 @@ export default function AddTaskModal({
       id: nanoid(),
       createdAt: today,
       updatedAt: today,
-      status: taskStatus,
     });
 
     setOpen(false);

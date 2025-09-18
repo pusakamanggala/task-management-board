@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { TaskLabel, TaskPriority } from "@/types/task";
+import { TaskLabel, TaskPriority, TaskStatus } from "@/types/task";
 
 export const checklistItemSchema = z.object({
   id: z.string(),
@@ -29,6 +29,10 @@ export const taskFormSchema = z.object({
   label: z.enum(["feature", "bug", "issue", "undefined"] as [
     TaskLabel,
     ...TaskLabel[]
+  ]),
+  status: z.enum(["todo", "doing", "review", "done", "rework"] as [
+    TaskStatus,
+    ...TaskStatus[]
   ]),
   priority: z
     .enum(["low", "medium", "high"] as [TaskPriority, ...TaskPriority[]])

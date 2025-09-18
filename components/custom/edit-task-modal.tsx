@@ -35,7 +35,7 @@ import {
   MultiSelectValue,
 } from "@/components/ui/multi-select";
 import { taskFormSchema, TaskFormValues } from "@/lib/schemas/taskFormSchema";
-import { Task, TaskLabel, TaskPriority } from "@/types/task";
+import { Task, TaskLabel, TaskPriority, TaskStatus } from "@/types/task";
 import { nanoid } from "nanoid";
 import { Eye, Trash2 } from "lucide-react";
 import { members } from "@/data/members";
@@ -50,6 +50,7 @@ interface EditTaskModalProps {
 
 const priorities: TaskPriority[] = ["low", "medium", "high"];
 const labels: TaskLabel[] = ["feature", "bug", "issue", "undefined"];
+const status: TaskStatus[] = ["todo", "doing", "review", "done", "rework"];
 
 export default function EditTaskModal({ task, refetch }: EditTaskModalProps) {
   const [open, setOpen] = useState(false);
@@ -66,6 +67,7 @@ export default function EditTaskModal({ task, refetch }: EditTaskModalProps) {
       priority: task.priority,
       checklist: task.checklist || [],
       attachment: task.attachment || null,
+      status: task.status,
     },
   });
 
@@ -96,6 +98,7 @@ export default function EditTaskModal({ task, refetch }: EditTaskModalProps) {
       priority: task.priority,
       checklist: task.checklist || [],
       attachment: task.attachment || null,
+      status: task.status,
     });
   }, [task, form]);
 
@@ -117,6 +120,32 @@ export default function EditTaskModal({ task, refetch }: EditTaskModalProps) {
             onSubmit={form.handleSubmit(onSubmit)}
             className="flex flex-col gap-4"
           >
+            {/* status */}
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {status.map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {status.charAt(0).toUpperCase() + status.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* Title */}
             <FormField
               control={form.control}
