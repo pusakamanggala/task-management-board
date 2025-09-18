@@ -14,7 +14,7 @@ export default function Home() {
   const addTask = useAddTask();
 
   const searchParams = useSearchParams();
-  const filter = searchParams.get("filter"); // "label" | "dueDate" | "assignee"
+  const filter = searchParams.get("filter") || "label";
   const query = searchParams.get("q")?.toLowerCase() || "";
 
   // Filter tasks based on query
@@ -28,7 +28,11 @@ export default function Home() {
 
       switch (filter) {
         case "label":
-          return task.label.toLowerCase().includes(query);
+          return (
+            task.label.toLowerCase().includes(query) ||
+            task.title.toLowerCase().includes(query) ||
+            task.description.toLowerCase().includes(query)
+          );
         case "dueDate":
           return task.dueDate.toLowerCase().includes(query);
         case "assignee":
