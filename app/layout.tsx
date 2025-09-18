@@ -35,7 +35,7 @@ export default function RootLayout({
           <main className="flex-1 overflow-y-auto">
             <Suspense>{children}</Suspense>
           </main>
-          <Toaster />
+          <Toaster position="top-center" />
         </div>
       </body>
     </html>

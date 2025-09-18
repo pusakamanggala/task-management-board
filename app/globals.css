@@ -120,3 +120,27 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Success toast */
+[data-sonner-toast][data-type="success"] {
+  background-color: #3b82f6 !important; /* Tailwind blue-500 */
+  color: #ffffff !important;
+}
+
+/* Error toast */
+[data-sonner-toast][data-type="error"] {
+  background-color: #ef4444 !important; /* red-500 */
+  color: #ffffff !important;
+}
+
+/* Warning toast */
+[data-sonner-toast][data-type="warning"] {
+  background-color: #facc15 !important; /* yellow-400 */
+  color: #000000 !important;
+}
+
+/* Info toast */
+[data-sonner-toast][data-type="info"] {
+  background-color: #3b82f6 !important; /* blue-500 */
+  color: #ffffff !important;
+}
