@@ -42,6 +42,7 @@ import { members } from "@/data/members";
 import { useState, useEffect } from "react";
 import { Avatar, AvatarImage } from "../ui/avatar";
 import { useUpdateTask } from "@/hooks/useUpdateTask";
+import { Textarea } from "../ui/textarea";
 
 interface EditTaskModalProps {
   task: Task;
@@ -169,7 +170,7 @@ export default function EditTaskModal({ task, refetch }: EditTaskModalProps) {
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Task description" />
+                    <Textarea {...field} placeholder="Task description" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

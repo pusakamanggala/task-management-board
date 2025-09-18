@@ -41,6 +41,7 @@ import { PlusIcon, Trash2 } from "lucide-react";
 import { members } from "@/data/members";
 import { useState } from "react";
 import { Avatar, AvatarImage } from "../ui/avatar";
+import { Textarea } from "../ui/textarea";
 
 interface AddTaskModalProps {
   taskStatus: TaskStatus;
@@ -133,7 +134,7 @@ export default function AddTaskModal({
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Input placeholder="Task description" {...field} />
+                    <Textarea placeholder="Task description" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
