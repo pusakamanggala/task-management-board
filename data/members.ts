@@ -1,4 +1,3 @@
-// src/data/members.ts
 import { Member } from "@/types/task";
 
 export const members: Member[] = [
